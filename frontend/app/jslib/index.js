@@ -3,7 +3,7 @@
  * Act as a small JS framework.
  */
 if (typeof define === 'function' && define.amd) {
-  define(['jquery', 'handlebars', 'jslib/utils/index'],
+  define(['jquery', 'handlebars', 'app/jslib/utils/index'],
   function jscf($, Handlebars, utils) {
     'use strict';
 

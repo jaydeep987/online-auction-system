@@ -1,0 +1,66 @@
+{
+  "enforceDefine": false,
+  "shim": {
+    "bootstrap": {
+      "deps": [
+        "jquery"
+      ]
+    },
+    "fileinput": {
+      "deps": [
+        "jquery"
+      ]
+    },
+    "explorertheme": {
+      "deps": [
+        "fileinput",
+        "jquery"
+      ],
+      "exports": "$.fn.fileinputThemes.explorer"
+    },
+    "lightslider": {
+      "deps": [
+        "jquery"
+      ]
+    },
+    "jscf": {
+      "deps": [
+        "jquery",
+        "handlebars"
+      ]
+    }
+  },
+  "paths": {
+    "handlebars": "bower_components/handlebars/handlebars.amd",
+    "jquery": "bower_components/jquery/dist/jquery",
+    "bootstrap": "bower_components/bootstrap/dist/js/bootstrap",
+    "moment": "bower_components/moment/moment",
+    "underscore": "bower_components/underscore/underscore",
+    "lightslider": "bower_components/lightslider/dist/js/lightslider",
+    "cart": "app/js/compiled-templates/cart",
+    "item": "app/js/compiled-templates/item",
+    "searchpage": "app/js/compiled-templates/searchpage",
+    "sell": "app/js/compiled-templates/sell",
+    "toppage": "app/js/compiled-templates/toppage",
+    "user": "app/js/compiled-templates/user",
+    "viewCartItems": "app/js/cart/modules/viewCartItems",
+    "constants": "app/js/constants/modules/constants",
+    "itemView": "app/js/item/modules/itemView",
+    "sellItem": "app/js/sell/modules/sellItem",
+    "homepage": "app/js/toppage/modules/homepage",
+    "homepageBindings": "app/js/toppage/modules/homepageBindings",
+    "mainHeader": "app/js/toppage/modules/mainHeader",
+    "homeAppliancesWidget": "app/js/toppage/modules/widgets/homeAppliancesWidget",
+    "laptopsAndDesktopsWidget": "app/js/toppage/modules/widgets/laptopsAndDesktopsWidget",
+    "newArrivalsWidget": "app/js/toppage/modules/widgets/newArrivalsWidget",
+    "loginUtils": "app/js/utils/modules/loginUtils",
+    "viewCartItemsCtrl": "app/js/controllers/cart/viewCartItemsCtrl",
+    "itemViewCtrl": "app/js/controllers/item/itemViewCtrl",
+    "homepageWidgetsCtrl": "app/js/controllers/toppage/homepageWidgetsCtrl",
+    "hbdivide": "bower_components/bullhorn-handlebars-helpers/src/math/divide",
+    "fileinput": "bower_components/bootstrap-fileinput/js/fileinput",
+    "explorertheme": "bower_components/bootstrap-fileinput/themes/explorer/theme",
+    "jscf": "app/jslib/index",
+    "jmask": "bower_components/jquery-mask-plugin/dist/jquery.mask"
+  }
+}

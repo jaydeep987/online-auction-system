@@ -1,3 +1,5 @@
+/* eslint-disable */
+/* jshint esnext: true */
 module.exports = function (grunt) {
   'use strict';
 
@@ -26,6 +28,7 @@ module.exports = function (grunt) {
   }
 
   const packageFile = 'package.json';
+  const requireJsConfigFile = 'app/js/requirejsconfig.json';
 
   grunt.registerTask('initGrunt', 'Load package.json and initConfig', () => {
     const wiredep = require('wiredep');
@@ -46,9 +49,9 @@ module.exports = function (grunt) {
     function gruntInit(pkgFile) {
       const pkg = grunt.file.readJSON(pkgFile);
       const lessOptions = {
-        paths   : ['assets/styles-less'],
+        paths: ['assets/styles-less'],
         ieCompat: true,
-        plugins : [
+        plugins: [
           new (require('less-plugin-autoprefix'))({ browsers: ['last 2 versions'] }),
         ],
       };
@@ -66,6 +69,9 @@ module.exports = function (grunt) {
 
         return files;
       });
+
+      // read requirejsconfig json file
+      const requirejsConfig = grunt.file.readJSON(requireJsConfigFile);
 
       grunt.initConfig({
         clean: {
@@ -91,8 +97,8 @@ module.exports = function (grunt) {
         handlebars: {
           all: {
             options: {
-              exportAMD      : true,
-              returnAMD      : false,
+              exportAMD: true,
+              returnAMD: false,
               returnTemplates: true,
             },
             files: (() => {
@@ -113,43 +119,97 @@ module.exports = function (grunt) {
           compile: {
             options: {
               baseUrl: '.',
-              out    : 'dist/js/bundle.js',
-              include: grunt.file.expand(['app/js/**/*.js', '!app/js/compiled-templates/**', `!${pkg.moduleConfigFile}`]),
-              paths  : (() => {
-                const dependencies = wiredep({
-                  directory: './bower_components',
-                });
-                const paths = {};
-                let fileName;
-
-                // load bower components
-                Object.keys(dependencies).forEach((key) => {
-                  if (key === 'js') {
-                    dependencies[key].map((path) => {
-                      fileName = path.substring(path.lastIndexOf('/') + 1).split('.')[0];
-                      paths[fileName] = path.replace('.js', '');
-                    });
-                  }
-                });
-
-                // load compiled templates
-                grunt.file.expand('app/js/compiled-templates/**/*.js').map((file) => {
-                  fileName = file.substring(file.lastIndexOf('/') + 1).replace('.js', '');
-                  paths[fileName] = file.replace('.js', '');
-                });
-
-                return paths;
-              })(),
+              removeCombined: false,
+              findNestedDependencies: true,
+              out: 'dist/js/bundle.js',
+              generateSourceMaps: false,
+              shim: requirejsConfig.shim,
+              wrapShim: true,
+              optimize: "none",
+              uglify2: {
+                output: {
+                  beautify: true
+                }
+              },
+              //name: 'bower_components/requirejs/require.js',
+              name: 'app/js/appConfig.js',
+              //include: grunt.file.expand(['app/js/**/*.js', `!${pkg.moduleConfigFile}`]),
+              paths: requirejsConfig.paths
             },
           },
+        },
+
+        replace: {
+          dev: {
+            options: {
+              patterns: [
+                {
+                  match: /<!-- include_requirejs -->/g,
+                  replacement: '<script src="/bower_components/requirejs/require.js"></script>'
+                },
+                {
+                  match: /<!-- include_livereload -->/g,
+                  replacement: '<script src="//localhost:35729/livereload.js"></script>'
+                },
+                {
+                  match: /<!-- include_bundle -->/g,
+                  replacement: ''
+                },
+                {
+                  match: /<!-- include_moduleconfig -->/g,
+                  replacement: '<script src="/app/js/module_config.js"></script>'
+                },
+                {
+                  match: /<!-- include_appconfig -->/g,
+                  replacement: '<script src="/app/js/appConfig.js"></script>'
+                },
+              ]
+            },
+            files: [{ expand: true, src: ['index.html'], dest: 'app/' }]
+          },
+          dist: {
+            options: {
+              patterns: [
+                {
+                  match: /<!-- include_requirejs -->/g,
+                  replacement: '<script src="js/require.js"></script>'
+                },
+                {
+                  match: /<!-- include_livereload -->/g,
+                  replacement: ''
+                },
+                {
+                  match: /<!-- include_bundle -->/g,
+                  replacement: '<script src="js/bundle.js"></script>'
+                },
+                {
+                  match: /<!-- injector:bower:css -->/g,
+                  replacement: '<link rel="stylesheet" href="assets/styles/vendorBundle.min.css">'
+                },
+                {
+                  match: /<!-- endinjector -->/,
+                  replacement: ''
+                },
+                {
+                  match: /<!-- include_moduleconfig -->/g,
+                  replacement: ''
+                },
+                {
+                  match: /<!-- include_appconfig -->/g,
+                  replacement: ''
+                },
+              ]
+            },
+            files: [{ expand: true, src: ['dist/index.html'], dest: '.' }]
+          }
         },
 
         less: {
           dev: {
             options: {
-              paths   : ['assets/styles-less'],
+              paths: ['assets/styles-less'],
               ieCompat: true,
-              plugins : [
+              plugins: [
                 new (require('less-plugin-autoprefix'))({ browsers: ['last 2 versions'] }),
               ],
             },
@@ -163,6 +223,37 @@ module.exports = function (grunt) {
           },
         },
 
+        cssmin: {
+          options: {
+            mergeIntoShorthands: false,
+            roundingPrecision: -1
+          },
+          target: {
+            files: [{
+              expand: false,
+              cwd: '.',
+              src: (() => {
+                const dependencies = wiredep({
+                  directory: './bower_components',
+                });
+                const files = [];
+                let fileName;
+
+                // load bower components
+                Object.keys(dependencies).forEach((key) => {
+                  if (key === 'css') {
+                    dependencies[key].map((path) => {
+                      files.push(path);
+                    });
+                  }
+                });
+                return files;
+              })(),
+              dest: 'dist/assets/styles/vendorBundle.min.css',
+            }]
+          }
+        },
+
         imagemin: {
           dynamic: {
             options: {
@@ -170,9 +261,9 @@ module.exports = function (grunt) {
             },
             files: [{
               expand: true,
-              cwd   : 'app/img/',
-              src   : ['**/*.{png,jpg,gif}'],
-              dest  : 'dist/img/',
+              cwd: 'app/img/',
+              src: ['**/*.{png,jpg,gif}'],
+              dest: 'dist/img/',
             }],
           },
         },
@@ -181,24 +272,45 @@ module.exports = function (grunt) {
           main: {
             files: [
               {
-                expand : true,
-                src    : ['app/index.html'],
-                dest   : 'dist/',
-                filter : 'isFile',
+                expand: true,
+                src: ['index.html'],
+                dest: 'dist/',
+                filter: 'isFile',
                 flatten: true,
               },
               {
                 expand: true,
-                cwd   : 'app/assets',
-                src   : ['**', '!styles-less'],
-                dest  : 'dist/',
+                cwd: 'app/assets',
+                src: ['**', '!styles-less/**'],
+                dest: 'dist/assets/',
               },
               {
                 expand: true,
-                cwd   : 'bower_components/requirejs',
-                src   : ['require.js'],
-                dest  : 'dist/js/',
+                cwd: 'bower_components/requirejs',
+                src: ['require.js'],
+                dest: 'dist/js/',
               },
+              {
+                expand: true,
+                cwd: '.',
+                src: ['bower_components/bootstrap/dist/fonts/*', 'bower_components/components-font-awesome/fonts/*'],
+                dest: 'dist/assets/fonts/',
+                flatten: true,
+              },
+              {
+                expand: true,
+                cwd: '.',
+                src: ['bower_components/foundation-icon-fonts/*.woff', 'bower_components/foundation-icon-fonts/*.eot'],
+                dest: 'dist/assets/styles/',
+                flatten: true,
+              },
+              {
+                expand: true,
+                cwd: '.',
+                src: ['bower_components/bootstrap-fileinput/img/*'],
+                dest: 'dist/assets/img/',
+                flatten: true,
+              }
             ],
           },
         },
@@ -206,12 +318,12 @@ module.exports = function (grunt) {
         connect: {
           server: {
             options: {
-              directory  : grunt.option('directory') || '.',
-              hostname   : pkg.serverHost || getLocalIpAddress(),
-              cors       : true,
-              port       : pkg.serverPort,
+              directory: grunt.option('directory') || '.',
+              hostname: pkg.serverHost || getLocalIpAddress(),
+              cors: true,
+              port: pkg.serverPort,
               openBrowser: pkg.openBrowser,
-              livereload : true,
+              livereload: true,
             },
           },
         },
@@ -235,8 +347,9 @@ module.exports = function (grunt) {
 
         updateModuleConfig: {
           options: {
-            pkg    : pkg,
+            pkg: pkg,
             wiredep: wiredep,
+            requirejsConfig: requirejsConfig,
           },
         },
       });
@@ -247,24 +360,63 @@ module.exports = function (grunt) {
     const options = this.options();
     const pkg = options.pkg;
     const configFile = grunt.file.read(pkg.moduleConfigFile).split('\n');
-    const linesWithNo = {};
-    const firstHalf = [];
-    const lastHalf = [];
+    const requirejsConfig = options.requirejsConfig;
+
     let compiledTpls = '';
+    const extend = require('extend');
     const dependencies = options.wiredep({
       directory: './bower_components',
     });
     const pathsNotToInclude = {
       require: '',
     };
-    let lineno;
-    let line;
-    let startLine;
-    let endLine;
+    let sections;
     let fileName;
+    let moduleNames = [];
+
+    function getSection(file, sectionStartRegEx, sectionEndRegEx, type) {
+      const linesWithNo = {};
+      const firstHalf = [];
+      const lastHalf = [];
+      let startLine;
+      let endLine;
+      let lineno;
+      let line;
+      // find startLine & endLine
+      file.map((kline, vlineno) => {
+        linesWithNo[vlineno + 1] = kline;
+        if (sectionStartRegEx.test(kline)) {
+          startLine = vlineno + 1;
+        } else if (sectionEndRegEx.test(kline)) {
+          endLine = vlineno + 1;
+        }
+      });
+
+      if (type === 'firstandlast') {
+        // get first half
+        for (lineno in linesWithNo) {
+          line = linesWithNo[lineno];
+          if (lineno <= startLine) {
+            firstHalf.push(line);
+          }
+          if (lineno >= endLine) {
+            lastHalf.push(line);
+          }
+        }
+      } else if (type === 'exact') {
+        for (lineno in linesWithNo) {
+          if (lineno > startLine && lineno < endLine) {
+            firstHalf.push(linesWithNo[lineno]);
+          }
+        }
+      }
+
+      return { firstHalf: firstHalf.join('\n'), lastHalf: lastHalf.join('\n') };
+    }
 
     function concatExpandedFiles(file) {
       fileName = file.substring(file.lastIndexOf('/') + 1).replace('.js', '');
+      moduleNames.push(`'${fileName}'`);
       compiledTpls = `${compiledTpls}\n    '${fileName}': '${file.replace('.js', '').replace('app/', '')}',`;
     }
 
@@ -286,27 +438,53 @@ module.exports = function (grunt) {
     // include controllers
     grunt.file.expand('app/js/controllers/**/*.js').map(concatExpandedFiles);
 
-    // find startLine & endLine
-    configFile.map((kline, vlineno) => {
-      linesWithNo[vlineno + 1] = kline;
-      if (/\/\/ <include_paths>/.test(kline)) {
-        startLine = vlineno + 1;
-      } else if (/\/\/ <\/include_paths>/.test(kline)) {
-        endLine = vlineno + 1;
+    // update requirejsconfig file
+    (function updateRequirejsConfig() {
+      // convert paths related to baseDir which is .
+      function convertPaths(obj, keyToConvert) {
+        Object.keys(obj).forEach((key) => {
+          if (key == keyToConvert) {
+            Object.keys(obj[key]).forEach((key1) => {
+              depValue = obj[key][key1];
+              if (!/^\/bower_components/.test(depValue)) {
+                obj[key][key1] = `app/${depValue}`;
+              } else {
+                obj[key][key1] = depValue.substring(1);
+              }
+            });
+          }
+        });
       }
-    });
+      sections = getSection(configFile, /\/\/ <include_custom_paths>/, /\/\/ <\/include_custom_paths>/, 'exact');
+      let jsonCompatibleStr = compiledTpls + sections.firstHalf.substring(0, sections.firstHalf.length - 1);
+      jsonCompatibleStr = jsonCompatibleStr.replace(/\'/g, '"');
+      let paths = JSON.parse(`{${jsonCompatibleStr}}`);
+      let copyOfConfig = extend(true, {}, requirejsConfig);
+      let shimConfig = getSection(configFile, /\/\/ <shim_config>/, /\/\/ <\/shim_config>/, 'exact');
+      shimConfig = shimConfig.firstHalf.substring(0, shimConfig.firstHalf.length - 1);
+      shimConfig = eval('shimConfig={'+shimConfig + '}');
+      let depValue;
 
-        // get first half
-    for (lineno in linesWithNo) {
-      line = linesWithNo[lineno];
-      if (lineno <= startLine) {
-        firstHalf.push(line);
-      }
-      if (lineno >= endLine) {
-        lastHalf.push(line);
-      }
-    }
-    grunt.file.write(pkg.moduleConfigFile, `${firstHalf.join('\n')}\n${compiledTpls}\n${lastHalf.join('\n')}`);
+      copyOfConfig.paths = paths;
+      copyOfConfig.shim = shimConfig.shim;
+
+      convertPaths(copyOfConfig, 'paths');
+
+      grunt.file.write(requireJsConfigFile, JSON.stringify(copyOfConfig, null, 2));
+    }());
+
+    (function updateAppConfig() {
+      let appConfigFile = grunt.file.read('app/js/appConfig.js').split('\n');
+      let requireModules = moduleNames.join(', ');
+      requireModules = `require([${requireModules}], function() {});`;
+      sections = getSection(appConfigFile, /\/\/ <make_it_start_page>/, /\/\/ <\/make_it_start_page>/, 'firstandlast');
+
+      grunt.file.write('app/js/appConfig.js', `${sections.firstHalf}\n${requireModules}\n${sections.lastHalf}`);
+    }());
+
+    sections = getSection(configFile, /\/\/ <include_paths>/, /\/\/ <\/include_paths>/, 'firstandlast');
+
+    grunt.file.write(pkg.moduleConfigFile, `${sections.firstHalf}\n${compiledTpls}\n${sections.lastHalf}`);
   });
 
   grunt.registerTask('removeBowers', 'Removes bower_components from index.html', () => {
@@ -335,21 +513,8 @@ module.exports = function (grunt) {
     lines = ignoreLinesAndGet(index, /<!-- injector:bower:css -->/);
     lines = ignoreLinesAndGet(lines, /<!-- injector:bower:js -->/);
 
-        // replace contents of index.html
+    // replace contents of index.html
     grunt.file.write('dist/index.html', lines.join('\n'));
-  });
-
-  grunt.registerTask('injectbuild', 'Injector for production build', () => {
-    const options = {
-      local_dependencies: {
-        files: {
-          'dist/index.html': ['dist/js/require.js', 'dist/js/bundle.js'],
-        },
-      },
-    };
-    grunt.config('injector.local_dependencies', options.local_dependencies);
-    grunt.config('injector.options', { ignorePath: 'dist/', addRootSlash: false });
-    grunt.task.run(['injector', 'removeBowers']);
   });
 
   grunt.loadNpmTasks('grunt-contrib-clean');
@@ -362,10 +527,12 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-contrib-imagemin');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-handlebars-compiler');
+  grunt.loadNpmTasks('grunt-replace');
+  grunt.loadNpmTasks('grunt-contrib-cssmin');
 
-    // default is build
-  grunt.registerTask('default', ['initGrunt', 'clean', 'handlebars:all', 'injector', 'updateModuleConfig', 'less:dev']);
+  // default is build
+  grunt.registerTask('default', ['initGrunt', 'clean', 'handlebars:all', 'replace:dev', 'injector', 'updateModuleConfig', 'less:dev']);
   grunt.registerTask('serve', ['initGrunt', 'connect:server', 'watch']);
   grunt.registerTask('rjs', ['initGrunt', 'requirejs']);
-  grunt.registerTask('build', ['initGrunt', 'clean', 'handlebars:all', 'requirejs', 'copy:main', 'injectbuild', 'less:prod', 'imagemin']);
+  grunt.registerTask('build', ['initGrunt', 'clean', 'handlebars:all', 'updateModuleConfig', 'requirejs', 'copy:main', 'replace:dist', 'less:prod', 'cssmin', 'imagemin']);
 };

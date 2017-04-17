@@ -1,6 +1,7 @@
 /* eslint quote-props:0, key-spacing:0 */
 requirejs.config({
   enforceDefine: false,
+  // <shim_config>
   shim         : {
     bootstrap: {
       deps: ['jquery'],
@@ -10,18 +11,24 @@ requirejs.config({
     },
     explorertheme: {
       deps   : ['fileinput', 'jquery'],
-      exports: 'explorertheme',
+      exports: '$.fn.fileinputThemes.explorer',
     },
     lightslider: {
       deps: ['jquery'],
     },
+    jscf: {
+      deps: ['jquery', 'handlebars'],
+    },
   },
+  // </shim_config>
   paths: {
+    // <include_custom_paths>
     'hbdivide'     : '/bower_components/bullhorn-handlebars-helpers/src/math/divide',
-    'fileinput'    : '/bower_components/bootstrap-fileinput/js/fileinput.min',
+    'fileinput'    : '/bower_components/bootstrap-fileinput/js/fileinput',
     'explorertheme': '/bower_components/bootstrap-fileinput/themes/explorer/theme',
     'jscf'         : 'jslib/index',
     'jmask'        : '/bower_components/jquery-mask-plugin/dist/jquery.mask',
+    // </include_custom_paths>
 
     // <include_paths>
 

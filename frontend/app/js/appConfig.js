@@ -49,4 +49,8 @@ if (typeof require === 'function') {
     });
     jscf.init('onlineauction', 'app');
   });
+
+  // <make_it_start_page>
+require(['cart', 'item', 'searchpage', 'sell', 'toppage', 'user', 'viewCartItems', 'constants', 'itemView', 'sellItem', 'homepage', 'homepageBindings', 'mainHeader', 'homeAppliancesWidget', 'laptopsAndDesktopsWidget', 'newArrivalsWidget', 'loginUtils', 'viewCartItemsCtrl', 'itemViewCtrl', 'homepageWidgetsCtrl'], function() {});
+  // </make_it_start_page>
 }

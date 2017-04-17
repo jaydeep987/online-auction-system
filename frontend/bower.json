@@ -35,7 +35,8 @@
     "bootstrap": {
       "main": [
         "./dist/js/bootstrap.js",
-        "./dist/css/*.min.*",
+        "./dist/css/bootstrap.css",
+        "./dist/css/bootstrap-theme.css",
         "./dist/fonts/*.*"
       ]
     },
@@ -49,7 +50,7 @@
     },
     "bootstrap-fileinput": {
       "main": [
-        "css/fileinput.min.css",
+        "css/fileinput.css",
         "themes/explorer/theme.css"
       ]
     },

@@ -12,7 +12,7 @@
   "release": "dev",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "postinstall": "bower install"
+    "postinstall": "bower install; cd app/jslib; yarn"
   },
   "repository": {
     "type": "git",
@@ -32,10 +32,12 @@
     "eslint-plugin-import": "^2.2.0",
     "eslint-plugin-jsx-a11y": "^4.0.0",
     "eslint-plugin-react": "^6.10.3",
+    "extend": "^3.0.0",
     "grunt": "^1.0.1",
     "grunt-contrib-clean": "^1.0.0",
     "grunt-contrib-connect": "^1.0.2",
     "grunt-contrib-copy": "^1.0.0",
+    "grunt-contrib-cssmin": "^2.0.0",
     "grunt-contrib-handlebars": "^1.0.0",
     "grunt-contrib-imagemin": "^1.0.1",
     "grunt-contrib-less": "^1.4.1",
@@ -43,6 +45,7 @@
     "grunt-contrib-watch": "^1.0.0",
     "grunt-handlebars-compiler": "^0.3.0",
     "grunt-injector": "^1.1.0",
+    "grunt-replace": "^1.0.1",
     "grunt-wiredep": "^3.0.1",
     "less-plugin-autoprefix": "^1.5.1",
     "os": "^0.1.1"
